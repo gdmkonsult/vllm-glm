@@ -54,6 +54,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        with:
+          name: glm53-builder
+          keep-state: true
+          cleanup: false
 
       - name: Log in to GHCR
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
@@ -80,6 +84,8 @@ jobs:
             CUDA_VERSION=13.0.3
             torch_cuda_arch_list=10.0
             ep_cuda_arch_list=10.0a
+            VLLM_BUILD_FLASH_ATTN_2=false
+            VLLM_BUILD_FLASH_ATTN_3=false
             RUN_WHEEL_CHECK=false
             max_jobs=${{ steps.resources.outputs.max_jobs }}
             nvcc_threads=${{ inputs.nvcc_threads || '1' }}
@@ -88,7 +94,6 @@ jobs:
             VLLM_BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             VLLM_IMAGE_TAG=${{ env.IMAGE }}:glm53-${{ github.sha }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Publish image reference
         run: |

@@ -291,6 +291,10 @@ RUN --mount=type=cache,target=/opt/uv/cache \
 # kernel needs PTX, add +PTX to that kernel's CMake arch list instead.
 ARG torch_cuda_arch_list='7.5 8.0 8.6 8.9 9.0 10.0 11.0 12.0'
 ENV TORCH_CUDA_ARCH_LIST=${torch_cuda_arch_list}
+ARG VLLM_BUILD_FLASH_ATTN_2=true
+ENV VLLM_BUILD_FLASH_ATTN_2=${VLLM_BUILD_FLASH_ATTN_2}
+ARG VLLM_BUILD_FLASH_ATTN_3=true
+ENV VLLM_BUILD_FLASH_ATTN_3=${VLLM_BUILD_FLASH_ATTN_3}
 #################### BUILD BASE IMAGE ####################
 
 #################### RUST BUILD IMAGE ####################

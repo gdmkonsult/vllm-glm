@@ -52,6 +52,16 @@ USE_PRECOMPILED_EXTENSIONS = envs.VLLM_USE_PRECOMPILED
 USE_PRECOMPILED_RUST_FRONTEND = (
     envs.VLLM_USE_PRECOMPILED or envs.VLLM_USE_PRECOMPILED_RUST
 )
+BUILD_FLASH_ATTN_2 = os.getenv("VLLM_BUILD_FLASH_ATTN_2", "true").lower() not in (
+    "0",
+    "false",
+    "no",
+)
+BUILD_FLASH_ATTN_3 = os.getenv("VLLM_BUILD_FLASH_ATTN_3", "true").lower() not in (
+    "0",
+    "false",
+    "no",
+)
 
 
 def should_require_rust_frontend() -> bool:
@@ -1360,9 +1370,11 @@ if _is_hip():
     ext_modules.append(CMakeExtension(name="vllm._rocm_C"))
 
 if _is_cuda():
-    ext_modules.append(CMakeExtension(name="vllm.vllm_flash_attn._vllm_fa2_C"))
-    if USE_PRECOMPILED_EXTENSIONS or (
-        CUDA_HOME and get_nvcc_cuda_version() >= Version("12.3")
+    if BUILD_FLASH_ATTN_2:
+        ext_modules.append(CMakeExtension(name="vllm.vllm_flash_attn._vllm_fa2_C"))
+    if BUILD_FLASH_ATTN_3 and (
+        USE_PRECOMPILED_EXTENSIONS
+        or (CUDA_HOME and get_nvcc_cuda_version() >= Version("12.3"))
     ):
         # FA3 requires CUDA 12.3 or later
         ext_modules.append(CMakeExtension(name="vllm.vllm_flash_attn._vllm_fa3_C"))
