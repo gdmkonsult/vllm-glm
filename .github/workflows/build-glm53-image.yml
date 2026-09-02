@@ -6,14 +6,16 @@ on:
       - glm53-pr-53906
   workflow_dispatch:
     inputs:
-      runner:
-        description: Runner used for the CUDA image build
+      max_jobs:
+        description: Parallel compiler jobs (0 selects automatically)
         required: true
-        default: ubuntu-24.04
-        type: choice
-        options:
-          - ubuntu-24.04
-          - self-hosted
+        default: "0"
+        type: string
+      nvcc_threads:
+        description: Threads per NVCC process
+        required: true
+        default: "1"
+        type: string
 
 permissions:
   contents: read
@@ -28,19 +30,27 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 360
 
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Reclaim hosted-runner disk space
-        if: github.event_name == 'push' || inputs.runner == 'ubuntu-24.04'
+      - name: Select build parallelism
+        id: resources
+        env:
+          REQUESTED_MAX_JOBS: ${{ inputs.max_jobs || '0' }}
         run: |
-          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
-          docker system prune --all --force
-          df -h /
+          cpu_jobs=$(( $(nproc) - 2 ))
+          memory_jobs=$(( $(awk '/MemTotal/ {print int($2 / 1024 / 1024)}' /proc/meminfo) / 4 ))
+          auto_jobs=$(( cpu_jobs < memory_jobs ? cpu_jobs : memory_jobs ))
+          (( auto_jobs < 2 )) && auto_jobs=2
+          max_jobs="$REQUESTED_MAX_JOBS"
+          [[ "$max_jobs" =~ ^[0-9]+$ ]] || { echo "max_jobs must be an integer" >&2; exit 1; }
+          (( max_jobs == 0 )) && max_jobs="$auto_jobs"
+          echo "max_jobs=$max_jobs" >> "$GITHUB_OUTPUT"
+          echo "Using $max_jobs compiler jobs on $(nproc) CPUs" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
@@ -68,8 +78,8 @@ jobs:
           build-args: |
             CUDA_VERSION=13.0.3
             torch_cuda_arch_list=10.0
-            max_jobs=2
-            nvcc_threads=2
+            max_jobs=${{ steps.resources.outputs.max_jobs }}
+            nvcc_threads=${{ inputs.nvcc_threads || '1' }}
             VLLM_BUILD_COMMIT=${{ github.sha }}
             VLLM_BUILD_PIPELINE=github-actions
             VLLM_BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
