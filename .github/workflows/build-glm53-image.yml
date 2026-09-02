@@ -66,7 +66,7 @@ jobs:
         id: build
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
-          context: .
+          context: "{{defaultContext}}"
           file: docker/Dockerfile
           target: vllm-openai
           platforms: linux/amd64
@@ -76,6 +76,7 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
           build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
             CUDA_VERSION=13.0.3
             torch_cuda_arch_list=10.0
             max_jobs=${{ steps.resources.outputs.max_jobs }}
