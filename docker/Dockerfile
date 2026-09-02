@@ -495,6 +495,7 @@ COPY tools/ep_kernels/install_python_libraries.sh /tmp/install_python_libraries.
 ARG DEEPEP_COMMIT_HASH=d4f41e4e93
 ARG NVSHMEM_VER
 ARG NCCL_VERSION
+ARG ep_cuda_arch_list='9.0a 10.0a'
 RUN --mount=type=cache,target=/opt/uv/cache \
     mkdir -p /tmp/ep_kernels_workspace/dist && \
     if [ "${INSTALL_RUBIN_PRERELEASE}" = "true" ]; then \
@@ -517,7 +518,7 @@ RUN --mount=type=cache,target=/opt/uv/cache \
             > /tmp/nccl-override.txt && \
         export UV_OVERRIDE=/tmp/nccl-override.txt; \
     fi && \
-    export TORCH_CUDA_ARCH_LIST='9.0a 10.0a' && \
+    export TORCH_CUDA_ARCH_LIST="${ep_cuda_arch_list}" && \
     /tmp/install_python_libraries.sh \
         --workspace /tmp/ep_kernels_workspace \
         --mode wheel \

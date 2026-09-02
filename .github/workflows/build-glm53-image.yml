@@ -79,6 +79,8 @@ jobs:
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
             CUDA_VERSION=13.0.3
             torch_cuda_arch_list=10.0
+            ep_cuda_arch_list=10.0a
+            RUN_WHEEL_CHECK=false
             max_jobs=${{ steps.resources.outputs.max_jobs }}
             nvcc_threads=${{ inputs.nvcc_threads || '1' }}
             VLLM_BUILD_COMMIT=${{ github.sha }}
