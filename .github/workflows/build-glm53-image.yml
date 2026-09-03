@@ -85,7 +85,7 @@ jobs:
             torch_cuda_arch_list=10.0
             ep_cuda_arch_list=10.0a
             VLLM_BUILD_FLASH_ATTN_2=false
-            VLLM_BUILD_FLASH_ATTN_3=false
+            VLLM_BUILD_FLASH_ATTN_3=true
             RUN_WHEEL_CHECK=false
             max_jobs=${{ steps.resources.outputs.max_jobs }}
             nvcc_threads=${{ inputs.nvcc_threads || '1' }}
